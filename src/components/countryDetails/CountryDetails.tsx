@@ -1,4 +1,5 @@
 import React from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BsArrowLeft } from 'react-icons/bs';
 
@@ -38,11 +39,14 @@ const initialCountryData: CountryData = {
 };
 
 const useCountryData = (countryName: string) => {
-  const [country, setCountry] = React.useState<CountryData>(initialCountryData);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [country, setCountry] = useState<CountryData>(initialCountryData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [borderCountries, setBorderCountries] = React.useState<
+    Record<string, string>
+  >({});
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -69,6 +73,23 @@ const useCountryData = (countryName: string) => {
           languages: data.languages,
           borders: data.borders,
         });
+
+        // Fetch border countries if they exist
+        if (data.borders && data.borders.length > 0) {
+          const borderPromises = data.borders.map(async (border: string) => {
+            const borderResponse = await fetch(
+              `https://restcountries.com/v3.1/alpha/${border}`
+            );
+            const [borderData] = await borderResponse.json();
+            return { code: border, name: borderData.name.common };
+          });
+          const borderResults = await Promise.all(borderPromises);
+          const borderMapping: Record<string, string> = {};
+          borderResults.forEach(({ code, name }) => {
+            borderMapping[code] = name;
+          });
+          setBorderCountries(borderMapping);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
@@ -81,19 +102,40 @@ const useCountryData = (countryName: string) => {
     }
   }, [countryName]);
 
-  return { country, loading, error };
+  return { country, loading, error, borderCountries };
 };
 
-const CountryDetails: React.FC<CountryDetailsProps> = ({ dark }) => {
+const CountryDetails = ({ dark }: CountryDetailsProps) => {
   const navigate = useNavigate();
   const { countryName } = useParams<{ countryName: string }>();
-  const { country, loading, error } = useCountryData(countryName ?? '');
+  const { country, loading, error, borderCountries } = useCountryData(
+    countryName ?? ''
+  );
 
   const currencies = Object.values(country.currencies);
   const languages = Object.values(country.languages);
 
+  const handleBorderClick = async (borderCode: string) => {
+    try {
+      const response = await fetch(
+        `https://restcountries.com/v3.1/alpha/${borderCode}`
+      );
+      const [data] = await response.json();
+      const borderCountryName = data.name.common;
+      navigate(`/${encodeURIComponent(borderCountryName.toLowerCase())}`);
+    } catch (error) {
+      console.error('Error fetching border country:', error);
+    }
+  };
+
   if (loading) {
-    return <div className={`loading ${dark ? 'dark' : ''}`}>Loading...</div>;
+    return (
+      <div
+        className={`loading ${dark ? 'dark absolute inset-0 flex items-center justify-center bg-slate-200/20 text-3xl backdrop-blur-sm' : 'absolute inset-0 flex items-center justify-center bg-slate-200/20 text-3xl backdrop-blur-sm'}`}
+      >
+        Loading...
+      </div>
+    );
   }
 
   if (error) {
@@ -101,49 +143,68 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ dark }) => {
   }
 
   return (
-    <div className={`country-details ${dark ? 'dark' : ''}`}>
-      <button
-        className={`back-btn ${dark ? 'dark' : ''}`}
-        onClick={() => navigate(-1)}
-        aria-label="Go back"
-      >
-        <BsArrowLeft />
-        Back
-      </button>
+    <div
+      className={`${
+        dark ? 'bg-dark-blue-bg text-white' : 'bg-white text-gray-800'
+      } container mx-auto flex max-h-screen flex-col gap-8 p-4 text-white`}
+    >
+      <div className="p-6">
+        <button
+          className={`${dark ? 'dark' : ''}bg-very-light-gray flex items-center gap-2 rounded-md px-8 py-2 shadow-lg`}
+          onClick={() => navigate(-1)}
+          aria-label="Go back"
+        >
+          <BsArrowLeft className="text-2xl" />
+          Back
+        </button>
+      </div>
 
-      <div className="country-details-body">
-        <div className="img-container">
-          <img src={country.flagImg} alt={`Flag of ${country.name}`} />
+      <div className="flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12">
+        <div className="md:w-full lg:w-3/4">
+          <img
+            src={country.flagImg}
+            className="w-full"
+            alt={`Flag of ${country.name}`}
+          />
         </div>
 
-        <div className="country-details-content">
-          <div className="country-details-name">
-            <h1>{country.name}</h1>
+        <div className="w-full p-4">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold capitalize">{country.name}</h1>
           </div>
 
-          <div className="country-details-info">
-            <section>
-              <p>
-                Official Name: <span>{country.official}</span>
+          <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
+            <section className="flex flex-col gap-1 text-xl font-bold">
+              <p className="">
+                Official Name:{' '}
+                <span className="text-lg font-normal">{country.official}</span>
               </p>
               <p>
-                Population: <span>{country.population.toLocaleString()}</span>
+                Population:{' '}
+                <span className="text-lg font-normal">
+                  {country.population.toLocaleString()}
+                </span>
               </p>
               <p>
-                Region: <span>{country.region}</span>
+                Region:{' '}
+                <span className="text-lg font-normal">{country.region}</span>
               </p>
               <p>
-                Sub Region: <span>{country.subregion}</span>
+                Sub Region:{' '}
+                <span className="text-lg font-normal">{country.subregion}</span>
               </p>
               <p>
-                Capital: <span>{country.capital.join(', ')}</span>
+                Capital:{' '}
+                <span className="text-lg font-normal">
+                  {country.capital.join(', ')}
+                </span>
               </p>
             </section>
 
-            <section>
+            <section className="flex flex-col gap-1 text-xl font-bold">
               <p>
                 Currencies:{' '}
-                <span>
+                <span className="text-lg font-normal">
                   {currencies.map((currency, index) => (
                     <React.Fragment key={currency.name}>
                       {currency.name}
@@ -154,7 +215,7 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ dark }) => {
               </p>
               <p>
                 Languages:{' '}
-                <span>
+                <span className="text-lg font-normal">
                   {languages.map((language, index) => (
                     <React.Fragment key={language}>
                       {language}
@@ -167,14 +228,24 @@ const CountryDetails: React.FC<CountryDetailsProps> = ({ dark }) => {
           </div>
 
           {country.borders && country.borders.length > 0 && (
-            <div className="country-borders">
-              <p>
-                Borders:{' '}
-                {country.borders.map((border) => (
-                  <span key={border} className="border-tag">
-                    {border}
-                  </span>
-                ))}
+            <div className="mt-4">
+              <p className="text-2xl font-bold">
+                Border Countries:{' '}
+                <div className="mt-2.5 flex flex-wrap gap-2.5 text-xl font-normal">
+                  {country.borders.map((border) => (
+                    <button
+                      key={border}
+                      className={`cursor-pointer rounded px-5 py-1.5 shadow-sm transition-all duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-md ${
+                        dark
+                          ? 'bg-gray-700 text-white hover:shadow-gray-700/30'
+                          : 'bg-white text-gray-800 hover:shadow-gray-200'
+                      }`}
+                      onClick={() => handleBorderClick(border)}
+                    >
+                      {borderCountries[border] || border}
+                    </button>
+                  ))}
+                </div>
               </p>
             </div>
           )}

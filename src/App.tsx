@@ -1,18 +1,17 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { MdOutlineLightMode, MdOutlineDarkMode } from 'react-icons/md';
 import { AiOutlineSearch } from 'react-icons/ai';
 
 import Country from './Country';
 import CountryDetails from './components/countryDetails/CountryDetails';
-// import ScrollButton from './components/ScrollButton/ScrollButton';
+import ScrollButton from './components/scrollButton/scrollButton';
 import {
   CountriesProvider,
   useCountriesContext,
   Country as CountryType,
 } from './countriesContext'; // Adjust path as needed
 
-const App: React.FC = () => {
+const App = () => {
   return (
     <Router>
       <CountriesProvider>
@@ -22,7 +21,7 @@ const App: React.FC = () => {
   );
 };
 
-const AppContent: React.FC = () => {
+const AppContent = () => {
   const {
     countries,
     dark,
@@ -37,10 +36,10 @@ const AppContent: React.FC = () => {
 
   return (
     <div
-      className={`min-h-screen ${dark ? 'dark' : ''} bg-very-light-gray dark:bg-dark-blue-bg`}
+      className={`${dark ? 'dark' : ''} min-h-screen w-full overflow-hidden bg-very-light-gray dark:bg-dark-blue-bg`}
     >
-      <header className="sticky top-0 z-50 bg-very-light-gray shadow-md dark:bg-dark-blue-bg dark:text-white">
-        <div className="container mx-auto flex items-center justify-between px-4 py-6">
+      <header className="sticky top-0 z-50 w-full bg-very-light-gray shadow-md dark:bg-dark-blue-bg dark:text-white">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-6">
           <h1 className="text-2xl font-bold">Where in the world?</h1>
           <button
             onClick={toggleDarkMode}
@@ -65,11 +64,15 @@ const AppContent: React.FC = () => {
           path="/"
           element={
             loading ? (
-              <div className={`${dark ? 'dark' : ''}`}>Loading . . .</div>
+              <div
+                className={`${dark ? 'dark absolute inset-0 flex items-center justify-center bg-slate-200/20 text-3xl backdrop-blur-sm' : 'absolute inset-0 flex items-center justify-center bg-slate-200/20 text-3xl backdrop-blur-sm'}`}
+              >
+                Loading . . .
+              </div>
             ) : (
               <>
                 <div className="">
-                  <section className="container mx-auto px-4">
+                  <section className="mx-auto mb-8 w-full max-w-7xl items-center justify-between px-4 md:flex">
                     <section
                       className={`relative flex items-center py-6 md:w-1/3`}
                     >
@@ -85,23 +88,27 @@ const AppContent: React.FC = () => {
                       onSubmit={(e) => e.preventDefault()}
                       className={`${dark ? 'dark' : ''} `}
                     >
-                      <select
-                        name="region"
-                        onChange={handleRegion}
-                        className={`${dark ? 'dark' : ''} m-4 mb-8 w-2/3 rounded-md bg-white p-1 px-4 py-4 shadow-md dark:bg-dark-blue-bg dark:text-white`}
-                      >
-                        <option value="">Fiter by Region</option>
-                        <option value="All">All</option>
-                        <option value="Asia">Asia</option>
-                        <option value="Africa">Africa</option>
-                        <option value="America">America</option>
-                        <option value="Europe">Europe</option>
-                        <option value="Oceania">Oceania</option>
-                      </select>
+                      <div className="">
+                        <select
+                          name="region"
+                          onChange={handleRegion}
+                          className={`${dark ? 'dark' : ''} w-2/3 rounded-md border-r-[16px] border-r-transparent bg-white px-8 py-4 pl-3 pr-9 shadow-md dark:bg-dark-blue-bg dark:text-white md:w-full`}
+                        >
+                          <option value="Fiter by Region">
+                            Fiter by Region
+                          </option>
+                          <option value="All">All</option>
+                          <option value="Africa">Africa</option>
+                          <option value="America">America</option>
+                          <option value="Asia">Asia</option>
+                          <option value="Europe">Europe</option>
+                          <option value="Oceania">Oceania</option>
+                        </select>
+                      </div>
                     </form>
                   </section>
                   <section
-                    className={`${dark ? 'dark' : ''}bg-very-light-gray container mx-auto grid grid-cols-1 gap-8 px-8 dark:bg-dark-blue-bg md:grid-cols-2 lg:grid-cols-4`}
+                    className={`${dark ? 'dark' : ''} mx-auto grid w-full max-w-7xl grid-cols-1 gap-12 bg-very-light-gray px-4 dark:bg-dark-blue-bg sm:px-6 md:grid-cols-2 lg:grid-cols-4 lg:px-8`}
                   >
                     {!noCountries ? (
                       countries.map((country: CountryType, index: number) => (
@@ -126,9 +133,11 @@ const AppContent: React.FC = () => {
             )
           }
         />
-        <Route path="/:countryName" element={<CountryDetails />} />
+        <Route path="/:countryName" element={<CountryDetails dark={dark} />} />
       </Routes>
-      {/* <ScrollButton /> */}
+      <div>
+        <ScrollButton />
+      </div>
     </div>
   );
 };
