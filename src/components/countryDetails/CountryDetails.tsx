@@ -150,7 +150,7 @@ const CountryDetails = ({ dark }: CountryDetailsProps) => {
     >
       <div className="p-6">
         <button
-          className={`${dark ? 'dark' : ''} flex items-center gap-2 rounded-md bg-very-light-gray px-8 py-2 text-black shadow-lg dark:text-very-light-gray`}
+          className={`${dark ? 'bg-dark-blue-bg text-white' : 'bg-white text-gray-800'} flex items-center gap-2 rounded-md px-8 py-2 shadow-lg`}
           onClick={() => navigate(-1)}
           aria-label="Go back"
         >
@@ -159,7 +159,9 @@ const CountryDetails = ({ dark }: CountryDetailsProps) => {
         </button>
       </div>
 
-      <div className="flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12">
+      <div
+        className={`${dark ? 'bg-dark-blue-bg text-white' : 'bg-white text-gray-800'} flex flex-col items-center justify-center gap-4 lg:flex-row lg:gap-12`}
+      >
         <div className="md:w-full lg:w-3/4">
           <img
             src={country.flagImg}
