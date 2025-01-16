@@ -150,7 +150,7 @@ const CountryDetails = ({ dark }: CountryDetailsProps) => {
     >
       <div className="p-6">
         <button
-          className={`${dark ? 'dark' : ''}bg-very-light-gray flex items-center gap-2 rounded-md px-8 py-2 shadow-lg`}
+          className={`${dark ? 'dark' : ''} flex items-center gap-2 rounded-md bg-very-light-gray px-8 py-2 text-black shadow-lg dark:text-very-light-gray`}
           onClick={() => navigate(-1)}
           aria-label="Go back"
         >
@@ -168,7 +168,9 @@ const CountryDetails = ({ dark }: CountryDetailsProps) => {
           />
         </div>
 
-        <div className="w-full p-4">
+        <div
+          className={`${dark ? 'dark' : ''} w-full bg-very-light-gray p-4 dark:bg-dark-blue-bg`}
+        >
           <div className="mb-4">
             <h1 className="text-2xl font-bold capitalize">{country.name}</h1>
           </div>
